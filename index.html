@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Pro-Cabinet Master v4.0</title>
+    <style>
+        :root { --primary: #2563eb; --bg: #f1f5f9; --panel: #ffffff; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; display: flex; justify-content: center; padding: 20px; }
+        .app-container { width: 1200px; display: grid; grid-template-columns: 380px 1fr; gap: 20px; }
+        .card { background: var(--panel); padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        h2 { font-size: 1.1rem; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top: 0; }
+        .input-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 5px; color: #444; }
+        input, select { width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+        .maliyet-ozet { background: #e0f2fe; padding: 15px; border-radius: 8px; margin-top: 15px; border: 1px solid #bae6fd; }
+        .price-text { font-size: 1.5rem; font-weight: 800; color: #0369a1; }
+        button { width: 100%; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-bottom: 8px; }
+        .btn-download { background: #16a34a; color: white; }
+        #visual-box { background: white; border: 1px solid #e2e8f0; border-radius: 12px; height: 400px; display: flex; align-items: center; justify-content: center; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="card">
+        <h2>💰 Üretim & Maliyet</h2>
+        <div class="input-group">
+            <div>
+                <label>Plaka m² Fiyatı (₺)</label>
+                <input type="number" id="m2Fiyat" value="450" oninput="tasarla()">
+            </div>
+            <div>
+                <label>Bant mt Fiyatı (₺)</label>
+                <input type="number" id="bantFiyat" value="15" oninput="tasarla()">
+            </div>
+        </div>
+        <hr>
+        <label>Genişlik (mm)</label>
+        <input type="number" id="gen" value="600" oninput="tasarla()">
+        <label>Yükseklik (mm)</label>
+        <input type="number" id="yuk" value="800" oninput="tasarla()">
+        <label>Raf Sayısı</label>
+        <input type="number" id="rafAdet" value="2" oninput="tasarla()">
+
+        <div class="maliyet-ozet">
+            <div style="font-size: 12px;">TAHMİNİ TOPLAM MALİYET</div>
+            <div id="toplamFiyat" class="price-text">0 ₺</div>
+            <div id="detayFiyat" style="font-size: 11px; color: #666; margin-top: 5px;"></div>
+        </div>
+        <br>
+        <button class="btn-download" onclick="indirCSV()">📥 Kesim Listesini Al</button>
+    </div>
+
+    <div class="card">
+        <h2>📐 Teknik Çizim</h2>
+        <div id="visual-box"></div>
+        <div id="kesimListesi" style="margin-top:20px; font-family: monospace; font-size: 12px; background: #f8fafc; padding: 10px;"></div>
+    </div>
+</div>
+
+<script>
+function tasarla() {
+    const G = parseFloat(document.getElementById('gen').value) || 0;
+    const Y = parseFloat(document.getElementById('yuk').value) || 0;
+    const R = parseInt(document.getElementById('rafAdet').value) || 0;
+    const m2Fiyat = parseFloat(document.getElementById('m2Fiyat').value) || 0;
+    const bantFiyat = parseFloat(document.getElementById('bantFiyat').value) || 0;
+    const t = 18;
+
+    // Alan Hesaplama (m2)
+    const toplamAlan = ((Y*400*2) + ((G-36)*400*2) + ((G-38)*380*R) + (Y*G)) / 1000000;
+    const malzemeMaliyet = toplamAlan * m2Fiyat;
+    
+    // Bant Hesaplama (mt)
+    const toplamBant = ((Y*2*2) + (G*2*2) + (G*R)) / 1000;
+    const bantMaliyet = toplamBant * bantFiyat;
+    
+    const genelToplam = malzemeMaliyet + bantMaliyet + 150; // 150 TL aksesuar sabit
+
+    document.getElementById('toplamFiyat').innerText = Math.ceil(genelToplam) + " ₺";
+    document.getElementById('detayFiyat').innerText = `Levha: ${malzemeMaliyet.toFixed(2)}₺ | Bant: ${bantMaliyet.toFixed(2)}₺ | Aksesuar: 150₺`;
+
+    // SVG Çizim (Hızlı Ölçeklendirme)
+    const scale = 350 / Math.max(G, Y);
+    const sG = G * scale, sY = Y * scale;
+    document.getElementById('visual-box').innerHTML = `
+        <svg width="${sG+20}" height="${sY+20}">
+            <rect x="10" y="10" width="${sG}" height="${sY}" fill="none" stroke="blue" />
+            <rect x="10" y="10" width="${18*scale}" height="${sY}" fill="#d2b48c" stroke="#333" />
+            <rect x="${10+sG-18*scale}" y="10" width="${18*scale}" height="${sY}" fill="#d2b48c" stroke="#333" />
+            <text x="${sG/2}" y="${sY+15}" font-size="10">${G}mm</text>
+        </svg>`;
+}
+window.onload = tasarla;
+</script>
+</body>
+</html>
